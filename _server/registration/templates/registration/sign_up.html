@@ -1,32 +1,34 @@
 {% extends "registration/base.html"%}
 
 {% block content %}
-<form action="/registration/sign_up/" method="post">
-  {% csrf_token %}
-  <div>
+<div class="auth-wrapper">
+  <h2 class="auth-header">Create Account</h2>
+  <form class="auth-form" action="/registration/sign_up/" method="post">
+    {% csrf_token %}
     <label>
       First Name
-      <input type="text" name="first_name">
+      <input type="text" name="first_name" required />
     </label>
-  </div>
-  <div>
+
     <label>
       Last Name
-      <input type="text" name="last_name">
+      <input type="text" name="last_name" required />
     </label>
-  </div>
-  <div>
+
     <label>
       Email
-      <input type="email" name="email">
+      <input type="email" name="email" required />
     </label>
-  </div>
-  <div>
+
     <label>
       Password
-      <input type="password" name="password">
+      <input type="password" name="password" required />
     </label>
-  </div>
-  <button>Create Account</button>
-</form>
+
+    <div class="auth-actions">
+      <button type="submit">Create Account</button>
+      <a href="/registration/sign_in/">Sign in</a>
+    </div>
+  </form>
+</div>
 {% endblock %}

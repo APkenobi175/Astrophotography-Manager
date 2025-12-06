@@ -1,49 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Outlet, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import "./App.css";
+
+async function logout() {
+  const res = await fetch("/registration/logout/", {
+    credentials: "include",
+  });
+
+  if (res.ok) {
+    window.location = "/registration/sign_in/";
+  } else {
+    console.error("Logout failed");
+  }
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [avatarInitial, setAvatarInitial] = useState("U");
 
-  async function logout() {
-    const res = await fetch("/registration/logout/", {
-      credentials: "same-origin", // include cookies!
-    });
-
-    if (res.ok) {
-      // navigate away from the single page app!
-      window.location = "/registration/sign_in/";
-    } else {
-      // handle logout failed!
+  useEffect(() => {
+    let mounted = true;
+    // Fetch the users info so we can get their name initial for the profile picture
+    async function fetchMe() {
+      try {
+        const res = await fetch("/api/me/", { credentials: "include" });
+        if (!res.ok) return;
+        const body = await res.json();
+        const first = body.firstName || "";
+        const uname = body.username || "";
+        // Use the first letter of their first name. Default to U
+        const initial = first ? first[0].toUpperCase() : (uname[0] || "U").toUpperCase();
+        if (mounted) setAvatarInitial(initial);
+      } catch (e) {
+        // ignore - leave default
+      }
     }
-  }
+    fetchMe();
+    return () => { mounted = false };
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      <button onClick={logout}>Logout</button>
-    </>
-  )
+    <div className="app-root">
+      <header className="app-header">
+        <h1>Astrophotography Sessions</h1>
+        {/* This is our navigation links using the hash router*/}
+        <nav className="app-nav">
+          <Link to="/">My Sessions</Link>
+          <Link to="/public">Public Feed</Link>
+          <Link to="/liked">My Liked Sessions</Link>
+         </nav>
+
+        <div className="header-actions">
+          <Link to="/profile" className="header-avatar" title="My Profile">{avatarInitial}</Link>
+          <button onClick={logout}>Logout</button>
+        </div>
+      </header>
+
+      <main className="app-main">
+        {/* This is the "page" */}
+        <Outlet />
+      </main>
+    </div>
+  );
 }
+
+
 
 export default App;

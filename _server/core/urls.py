@@ -2,5 +2,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', view=views.index, name="index"),
+    path("", views.index, name="index"),
+    path("api/sessions/", views.sessions_collection, name="sessions_collection"),
+    path("api/sessions/<int:session_id>/", views.session_detail, name="session_detail"),
+    path("api/sessions/public/", views.public_sessions, name="public_sessions"),
+    path("api/me/", views.current_user, name="current_user"),
+    path("api/targets/search/", views.search_targets, name="search_targets"),
+    path("api/sessions/liked/", views.liked_sessions, name="liked_sessions"),
+    path("api/sessions/<int:session_id>/like/", views.toggle_session_like, name="toggle_session_like"),
+    path("api/sessions/<int:session_id>/images/", views.upload_session_images, name="upload_session_images"),
 ]

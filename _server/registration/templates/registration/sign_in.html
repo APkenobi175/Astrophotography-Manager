@@ -1,22 +1,26 @@
 {% extends "registration/base.html"%}
 
 {% block content %}
-<form action="/registration/sign_in/" method="post">
-  {% csrf_token %}
-  <div>
+<h1 class="auth-page-title">Astrophotgraphy Session Manager</h1>
+<div class="auth-wrapper">
+  <h2 class="auth-header">Sign In</h2>
+  <form class="auth-form" action="/registration/sign_in/" method="post">
+    {% csrf_token %}
     <label>
       Email
-      <input type="email" name="email">
+      <input type="email" name="email" required />
     </label>
-  </div>
-  <div>
+
     <label>
       Password
-      <input type="password" name="password">
+      <input type="password" name="password" required />
     </label>
-  </div>
-  <button>Sign In</button>
 
-</form>
-<a href="/registration/sign_up/">Create New Account</a>
+    <div class="auth-actions">
+      <button type="submit">Sign In</button>
+      <a href="/registration/sign_up/">Create account</a>
+    </div>
+  </form>
+
+</div>
 {% endblock %}

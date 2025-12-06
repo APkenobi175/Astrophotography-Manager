@@ -1,42 +1,544 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* My Sessions custom row layout */
+.my-sessions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.my-session-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.my-session-title {
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  margin-right: 8px;
+  min-width: 120px;
+}
+.my-session-title:hover {
+  text-decoration: underline;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
+.my-session-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  background: #222;
   color: #888;
+}
+
+.my-session-thumb.no-image {
+  border: 1px dashed #444;
+  background: #222;
+  color: #888;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.my-session-caption {
+  color: var(--text-muted);
+  font-size: 1rem;
+  flex: 1;
+  white-space: pre-line;
+}
+:root {
+  --bg: #0d0f13;
+  --bg-light: #171a20;
+  --bg-hover: #1f232b;
+  --text: #e2e8f0;
+  --text-muted: #9aa3b2;
+  --accent: #4f8cff;
+  --accent-light: #74a6ff;
+  --border: #2a2f36;
+
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+
+
+.app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  background: var(--bg-light);
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.app-nav {
+  display: flex;
+  gap: 16px;
+}
+
+.app-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.app-nav a:hover {
+  color: var(--accent-light);
+}
+
+button {
+  background: var(--accent);
+  border: none;
+  padding: 8px 16px;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+button:hover {
+  background: var(--accent-light);
+}
+
+
+
+.app-main {
+  padding: 24px;
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;       /* This line is important */
+}
+
+
+/* ---------- New Session Form ---------- */
+
+.new-session-section,
+.sessions-list-section {
+  background: var(--bg-light);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+
+  width: 100%;
+  max-width: 600px;          /* This line is also important because it makes it wide enough */
+}
+
+
+.new-session-section h2,
+.sessions-list-section h2 {
+  margin-top: 0;
+}
+
+.new-session-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.new-session-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.new-session-form input[type="text"],
+.new-session-form input[type="number"],
+.new-session-form input[type="datetime-local"],
+.new-session-form textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  margin-top: 6px;
+  color: var(--text);
+}
+
+.new-session-form input:focus,
+.new-session-form textarea:focus {
+  outline: 1px solid var(--accent);
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* ---------- Sessions List ---------- */
+
+.sessions-list-section ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.sessions-list-section li {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sessions-list-section li:hover {
+  background: var(--bg-hover);
+}
+
+.sessions-list-section a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.sessions-list-section a:hover {
+  color: var(--accent-light);
+}
+
+/* ---------- Detail Page ---------- */
+
+.detail-wrapper {
+  background: var(--bg-light);
+  padding: 22px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  max-width: 600px;
+}
+
+.detail-wrapper h2 {
+  margin-top: 0;
+}
+
+.detail-wrapper p {
+  margin: 6px 0;
+}
+
+.detail-wrapper strong {
+  color: var(--accent-light);
+}
+
+.back-button {
+  margin-bottom: 20px;
+}
+
+/* Header action (avatar + logout) styling */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: #3a3b3f;
+  color: #f5f5f5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.header-avatar:hover {
+  background: #4b4c50;
+}
+
+
+.target-suggestions {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.target-suggestion-item {
+  text-align: left;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.target-suggestion-item:hover {
+  background: var(--bg-hover);
+}
+
+.target-suggestion-type {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.suggestion-status {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+
+/* ---- -- Session Div Card Styles ---- */
+.session-div {
+  background: #1f2023;
+  padding: 0.9rem 1rem; 
+  border-radius: 10px;
+  border: 1px solid #333;
+  color: #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* HEADER STRIP */
+.session-div-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  margin: -0.75rem -1rem 0.75rem; /* stretch to edges inside div */
+  border-radius: 8px;
+  background: #26272b; /* slightly lighter/different shade */
+}
+
+
+.session-div-user {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: #3a3b3f;
+  color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.user-text .username {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e5e5e5;
+}
+
+.user-text .real-name {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.posted-time {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* TITLE + TARGET */
+.session-div-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+
+/* Styles for the session link inside cards (so it's less bright on dark background (blue was ugly)) */
+.session-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #d7e6ff; 
+  text-decoration: none;
+}
+
+.session-card-title:hover,
+.session-card-title:focus {
+  color: var(--accent-light);
+  text-decoration: underline;
+}
+
+.session-card-target {
+  font-size: 0.9rem;
+  color: #bfc7d1; 
+}
+
+/* CAPTION */
+.session-div-caption {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.95rem;
+  color: #ddd;
+  white-space: pre-wrap;
+}
+
+/* STATS GRID */
+.session-div-stats-grid {
+  display: grid;
+  /* Responsive columns that fill the available width inside the card.
+     min column width is 120px, grow to distribute remaining space. */
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem 1rem;
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  width: 100%;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.stat-label {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: #888;
+}
+
+.stat-value {
+  color: #ddd;
+}
+
+
+/* For the public feed container */
+.session-div-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Like button and heart icon styles */
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* space between heart and count */
+  background: transparent;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.like-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Heart silhouette: use stroke for outline and fill when liked */
+.heart-icon {
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-block;
+  color: transparent; /* hide fill by default */
+  -webkit-text-stroke: 1px var(--text); /* outline look */
+  transition: color 150ms ease, -webkit-text-stroke-color 150ms ease;
+}
+
+.like-button.liked .heart-icon {
+  color: #e74c3c; /* red fill when liked */
+  -webkit-text-stroke: 0px transparent; /* remove outline on fill */
+}
+
+.like-count {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* keep button from showing default focus ring too strong */
+.like-button:focus {
+  outline: 2px solid rgba(79,140,255,0.15);
+  outline-offset: 2px;
+}
+
+/* Session image thumbnails inside cards */
+.session-images-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  align-items: stretch;
+}
+
+/* Make thumbnails share the available width equally (1, 2 or 3 items)
+   - When multiple images are present they will be the same width.
+   - A single image will expand to the full width of the card and be taller. */
+.session-images-row .session-thumb {
+  flex: 1 1 0%;
+  min-width: 0; /* allow flex items to shrink correctly */
+  height: 140px; /* default height for multi-image rows */
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+/* If there is only one image, make it larger and fill the card */
+.session-images-row .session-thumb:only-child {
+  height: 260px;
+}
+
+/* Detail page images */
+.detail-images {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  align-items: center;
+}
+
+/* Make detail page images behave like the session thumbnails: share width
+   equally when multiple images are present; single image is larger. */
+.detail-images img {
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  cursor: pointer;
+}
+
+.detail-images img:only-child {
+  height: 360px;
+  margin: 0 auto;
+}
+
+.detail-images img + img {
+  /* ensure consistent vertical alignment */
+  align-self: stretch;
 }

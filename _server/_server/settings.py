@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from dotenv import load_dotenv
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +29,13 @@ SECRET_KEY = 'django-insecure-b3+-#mtd71hul#1(jc^^x#k%4zr)aief^c9i14ya77)9e)1af(
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+# Allow common local dev origins (e.g. Vite dev server) to make requests
+# without triggering Django's CSRF Origin check. Update or extend as needed.
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
 
 # Application definition
@@ -124,6 +132,11 @@ USE_TZ = True
 
 # DONT USE THE STATIC URL WHEN IN DEBUG MODE
 STATIC_URL = 'static/' if not DEBUG else "__UNUSED__/"
+
+# Media files (user uploads)
+# In development Django will serve files under `MEDIA_URL` from `MEDIA_ROOT`.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

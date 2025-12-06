@@ -4,10 +4,14 @@ from django.http import StreamingHttpResponse
 
 def asset_proxy_middleware(next):
     def middleware(request):
-        # checking for .
-        if "." in request.path:
-            # Proxy request to asset server
-            response = requests.get(f"{os.environ.get('ASSET_URL')}{request.path.replace('/static', '')}", stream=True)
+        # Only proxy requests for static assets (i.e. paths starting with /static)
+        # and only if an ASSET_URL is configured. Do NOT proxy /media requests. 
+        # Adjusted by Copilot to help me get images to display, seems like it was a problem with the middleware afterall. 
+        asset_url = os.environ.get('ASSET_URL')
+        if asset_url and request.path.startswith('/static'):
+            # Proxy request to asset server (strip the /static prefix)
+            target = f"{asset_url}{request.path.replace('/static', '')}"
+            response = requests.get(target, stream=True)
 
             # Stream response
             return StreamingHttpResponse(
