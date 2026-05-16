@@ -19,7 +19,7 @@ from django.shortcuts import get_object_or_404
 # Load manifest when server launches
 MANIFEST = {}
 if not settings.DEBUG:
-    with open(f"{settings.BASE_DIR}/core/static/manifest.json") as f:
+    with open(f"{settings.BASE_DIR}/core/static/core/manifest.json") as f:
         MANIFEST = json.load(f)
 
 #Create your views here.
