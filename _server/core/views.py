@@ -5,22 +5,28 @@ import os
 import requests
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db import models
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.utils.dateparse import parse_datetime
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_http_methods
-from .models import Session, SessionLike, SessionImage, UserProfile
-from django.conf import settings
-from django.views.decorators.http import require_POST
-
-from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
+from .models import Session, SessionLike, SessionImage, UserProfile, ChatConversation, ChatMessage
 
 # Load manifest when server launches
 MANIFEST = {}
 if not settings.DEBUG:
     with open(f"{settings.BASE_DIR}/core/static/core/manifest.json") as f:
         MANIFEST = json.load(f)
+
+def _profile_pic(user):
+    """Return the URL of a user's profile picture, or None."""
+    try:
+        if user.profile.profile_picture:
+            return user.profile.profile_picture.url
+    except UserProfile.DoesNotExist:
+        pass
+    return None
+
 
 #Create your views here.
 @login_required
@@ -54,7 +60,11 @@ def current_user(request):
 @require_http_methods(["GET", "POST"])
 def sessions_collection(request):
     if request.method == "GET":
-        sessions = Session.objects.filter(user=request.user).order_by("-created_at")
+        sessions = (
+            Session.objects.filter(user=request.user)
+            .select_related("user__profile")
+            .order_by("-created_at")
+        )
         data = []
         for s in sessions:
             img_objects = [{"id": im.id, "url": im.image.url} for im in s.images.all()]
@@ -73,6 +83,7 @@ def sessions_collection(request):
                 "caption": s.caption,
                 "ownerName": (f"{s.user.first_name or ''} {s.user.last_name or ''}".strip() or s.user.username),
                 "ownerUsername": s.user.username,
+                "ownerProfilePicture": _profile_pic(s.user),
                 "postCreationDate": s.post_creation_date.isoformat(),
                 "likeCount": s.likes.count(),
                 "likedByCurrentUser": s.likes.filter(user=request.user).exists(),
@@ -369,41 +380,37 @@ def public_sessions(request):
 # Get a list of recent public sessions across all users, cap at 50
     sessions = (
         Session.objects.filter(is_public=True)
-        .select_related("user")
-        .order_by("-created_at")[:50]   # cap the feed
+        .select_related("user__profile")
+        .order_by("-created_at")[:50]
     )
-    # init data array
     data = []
     for s in sessions:
         total_integration = 0
         if s.light_frames and s.light_exposure_seconds:
             total_integration = s.light_frames * s.light_exposure_seconds
-
         owner_name = (f"{s.user.first_name or ''} {s.user.last_name or ''}".strip() or s.user.username)
-
-        data.append(
-            {
-                "id": s.id,
-                "title": s.title,
-                "target": s.target,
-                "datetimeStart": s.datetime_start.isoformat(),
-                "locationName": s.location_name,
-                "lightFrames": s.light_frames,
-                "lightExposureSeconds": s.light_exposure_seconds,
-                "totalIntegrationSeconds": total_integration,
-                "iso": s.iso,
-                "cameraModel": s.camera_model,
-                "telescopeOrLens": s.telescope_or_lens,
-                "isPublic": s.is_public,
-                "caption": s.caption,
-                "ownerName": owner_name,
-                "ownerUsername": s.user.username.split("@")[0],
-                "postCreationDate": s.post_creation_date.isoformat(),
-                "likeCount": s.likes.count(),
-                "likedByCurrentUser": s.likes.filter(user=request.user).exists(),
-                "images": [img.image.url for img in s.images.all()],
-            }
-        )
+        data.append({
+            "id": s.id,
+            "title": s.title,
+            "target": s.target,
+            "datetimeStart": s.datetime_start.isoformat(),
+            "locationName": s.location_name,
+            "lightFrames": s.light_frames,
+            "lightExposureSeconds": s.light_exposure_seconds,
+            "totalIntegrationSeconds": total_integration,
+            "iso": s.iso,
+            "cameraModel": s.camera_model,
+            "telescopeOrLens": s.telescope_or_lens,
+            "isPublic": s.is_public,
+            "caption": s.caption,
+            "ownerName": owner_name,
+            "ownerUsername": s.user.username,
+            "ownerProfilePicture": _profile_pic(s.user),
+            "postCreationDate": s.post_creation_date.isoformat(),
+            "likeCount": s.likes.count(),
+            "likedByCurrentUser": s.likes.filter(user=request.user).exists(),
+            "images": [img.image.url for img in s.images.all()],
+        })
 
     return JsonResponse({"sessions": data})
 
@@ -433,25 +440,24 @@ def upload_session_images(request, session_id):
         return JsonResponse({"error": "Forbidden"}, status=403)
     # Get the files from the request
     files = request.FILES.getlist("images")
-    print("FILES:", request.FILES)
-    print("FILES keys:", list(request.FILES.keys()))
     if not files:
         return JsonResponse({"error": "No files provided"}, status=400)
-    # Limiting to max 3 images per upload
-    if len(files) > 3:
-        return JsonResponse({"error": "Maximum 3 images allowed"}, status=400)
+
+    existing_count = session.images.count()
+    if existing_count + len(files) > 10:
+        slots = max(0, 10 - existing_count)
+        return JsonResponse({"error": f"Too many images. You can add {slots} more (max 10 per session)."}, status=400)
 
     saved = []
     MAX_BYTES = 50 * 1024 * 1024  # 50 MB per file
-    ALLOWED_EXT = (".jpg", ".jpeg", ".png") # No RAW FILES allowed
+    ALLOWED_EXT = (".jpg", ".jpeg", ".png")
 
     for f in files:
-        # Check if the file is allowed
         name = f.name.lower()
         if not name.endswith(ALLOWED_EXT):
-            return JsonResponse({"error": "Invalid file type"}, status=400)
+            return JsonResponse({"error": "Invalid file type. Only JPG and PNG are allowed."}, status=400)
         if f.size > MAX_BYTES:
-            return JsonResponse({"error": "File too large"}, status=400)
+            return JsonResponse({"error": f"'{f.name}' is too large. Maximum file size is 50 MB."}, status=400)
 
         img = SessionImage(session=session, image=f)
         img.save()
@@ -482,44 +488,39 @@ def liked_sessions(request):
 
     likes = (
         SessionLike.objects.filter(user=request.user)
-        .select_related("session", "session__user")
+        .select_related("session", "session__user__profile")
         .order_by("-created_at")
     )
 
     data = []
     for like in likes:
         s = like.session
-
         total_integration = 0
         if s.light_frames and s.light_exposure_seconds:
             total_integration = s.light_frames * s.light_exposure_seconds
-
         owner_name = (f"{s.user.first_name or ''} {s.user.last_name or ''}".strip() or s.user.username)
-        username_clean = s.user.username.split("@")[0]
-
-        data.append(
-            {
-                "id": s.id,
-                "title": s.title,
-                "target": s.target,
-                "datetimeStart": s.datetime_start.isoformat(),
-                "locationName": s.location_name,
-                "lightFrames": s.light_frames,
-                "lightExposureSeconds": s.light_exposure_seconds,
-                "totalIntegrationSeconds": total_integration,
-                "iso": s.iso,
-                "cameraModel": s.camera_model,
-                "telescopeOrLens": s.telescope_or_lens,
-                "isPublic": s.is_public,
-                "caption": s.caption,
-                "ownerName": owner_name,
-                "ownerUsername": username_clean,
-                "postCreationDate": s.post_creation_date.isoformat(),
-                "likeCount": s.likes.count(),
-                "likedByCurrentUser": True,  # duh
-                "images": [img.image.url for img in s.images.all()],
-            }
-        )
+        data.append({
+            "id": s.id,
+            "title": s.title,
+            "target": s.target,
+            "datetimeStart": s.datetime_start.isoformat(),
+            "locationName": s.location_name,
+            "lightFrames": s.light_frames,
+            "lightExposureSeconds": s.light_exposure_seconds,
+            "totalIntegrationSeconds": total_integration,
+            "iso": s.iso,
+            "cameraModel": s.camera_model,
+            "telescopeOrLens": s.telescope_or_lens,
+            "isPublic": s.is_public,
+            "caption": s.caption,
+            "ownerName": owner_name,
+            "ownerUsername": s.user.username,
+            "ownerProfilePicture": _profile_pic(s.user),
+            "postCreationDate": s.post_creation_date.isoformat(),
+            "likeCount": s.likes.count(),
+            "likedByCurrentUser": True,
+            "images": [img.image.url for img in s.images.all()],
+        })
 
     return JsonResponse({"sessions": data})
 
@@ -544,6 +545,7 @@ def _serialize_session(s, request_user):
         "caption": s.caption,
         "ownerName": (f"{s.user.first_name or ''} {s.user.last_name or ''}".strip() or s.user.username),
         "ownerUsername": s.user.username,
+        "ownerProfilePicture": _profile_pic(s.user),
         "postCreationDate": s.post_creation_date.isoformat(),
         "likeCount": s.likes.count(),
         "likedByCurrentUser": s.likes.filter(user=request_user).exists(),
@@ -626,3 +628,106 @@ def upload_profile_picture(request, username):
     profile.save()
 
     return JsonResponse({"profilePicture": profile.profile_picture.url})
+
+
+# ── CHAT ──────────────────────────────────────────────────────────────────────
+
+def _convo_json(convo, me):
+    other = convo.other_user(me)
+    latest = convo.messages.last()
+    return {
+        "id": convo.id,
+        "otherUser": {
+            "username": other.username,
+            "name": (f"{other.first_name or ''} {other.last_name or ''}".strip() or other.username),
+            "profilePicture": _profile_pic(other),
+        },
+        "latestMessage": {
+            "body": latest.body if latest else "",
+            "createdAt": latest.created_at.isoformat() if latest else None,
+            "mine": latest.sender_id == me.id if latest else False,
+        } if latest else None,
+    }
+
+
+@login_required
+@require_GET
+def chat_conversations(request):
+    me = request.user
+    convos = (
+        ChatConversation.objects
+        .filter(models.Q(user1=me) | models.Q(user2=me))
+        .select_related("user1__profile", "user2__profile")
+        .prefetch_related("messages")
+        .order_by("-messages__created_at")
+        .distinct()
+    )
+    return JsonResponse({"conversations": [_convo_json(c, me) for c in convos]})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def chat_messages(request, convo_id):
+    me = request.user
+    convo = get_object_or_404(
+        ChatConversation,
+        id=convo_id,
+    )
+    if convo.user1 != me and convo.user2 != me:
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    if request.method == "POST":
+        try:
+            body = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+        text = body.get("body", "").strip()
+        if not text:
+            return JsonResponse({"error": "Empty message"}, status=400)
+        msg = ChatMessage.objects.create(conversation=convo, sender=me, body=text)
+        return JsonResponse({
+            "id": msg.id,
+            "senderId": me.id,
+            "senderUsername": me.username,
+            "body": msg.body,
+            "createdAt": msg.created_at.isoformat(),
+            "mine": True,
+        }, status=201)
+
+    # GET — return messages, optionally since a given id
+    since_id = request.GET.get("since")
+    qs = convo.messages.select_related("sender")
+    if since_id:
+        qs = qs.filter(id__gt=since_id)
+    msgs = [
+        {
+            "id": m.id,
+            "senderId": m.sender_id,
+            "senderUsername": m.sender.username,
+            "body": m.body,
+            "createdAt": m.created_at.isoformat(),
+            "mine": m.sender_id == me.id,
+        }
+        for m in qs
+    ]
+    return JsonResponse({"messages": msgs, "conversationId": convo.id})
+
+
+@login_required
+@require_POST
+def chat_start(request, username):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    try:
+        other = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+    if other == request.user:
+        return JsonResponse({"error": "Cannot chat with yourself"}, status=400)
+
+    me = request.user
+    u1_id, u2_id = sorted([me.id, other.id])
+    u1 = User.objects.get(id=u1_id)
+    u2 = User.objects.get(id=u2_id)
+    convo, _ = ChatConversation.objects.get_or_create(user1=u1, user2=u2)
+    return JsonResponse(_convo_json(convo, me), status=200)

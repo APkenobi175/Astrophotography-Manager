@@ -30,7 +30,7 @@ export default function EditSessionModal({ session, onSave, onClose }) {
   const fileInputRef = useRef(null);
 
   const totalCount = existingImages.length + newFiles.length;
-  const canAddMore = totalCount < 3;
+  const canAddMore = totalCount < 10;
 
   function handleRemoveExisting(img) {
     setExistingImages(prev => prev.filter(i => i !== img));
@@ -200,7 +200,7 @@ export default function EditSessionModal({ session, onSave, onClose }) {
               style={{ display: "none" }}
               onChange={handleFileChange}
             />
-            <p className="modal-images-hint">JPG or PNG, max 50 MB each, up to 3 total.</p>
+            <p className="modal-images-hint">JPG or PNG, max 50 MB each, up to 10 total.</p>
           </div>
 
           <div className="modal-actions">

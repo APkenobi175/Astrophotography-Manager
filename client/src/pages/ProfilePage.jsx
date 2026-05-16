@@ -122,6 +122,15 @@ export default function ProfilePage() {
           <h2 className="profile-display-name">{displayName}</h2>
           <div className="profile-username">@{profile.username}</div>
 
+          {!profile.isOwnProfile && (
+            <button
+              className="message-btn"
+              onClick={() => window.__openChat?.(profile.username)}
+            >
+              Message
+            </button>
+          )}
+
           {editingBio ? (
             <div className="profile-bio-edit">
               <textarea

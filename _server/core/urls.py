@@ -14,4 +14,7 @@ urlpatterns = [
     path("api/sessions/<int:session_id>/images/<int:image_id>/", views.delete_session_image, name="delete_session_image"),
     path("api/profile/<str:username>/", views.user_profile, name="user_profile"),
     path("api/profile/<str:username>/picture/", views.upload_profile_picture, name="upload_profile_picture"),
+    path("api/chat/conversations/", views.chat_conversations, name="chat_conversations"),
+    path("api/chat/conversations/<int:convo_id>/", views.chat_messages, name="chat_messages"),
+    path("api/chat/start/<str:username>/", views.chat_start, name="chat_start"),
 ]
