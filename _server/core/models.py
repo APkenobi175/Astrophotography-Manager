@@ -56,3 +56,12 @@ class SessionImage(models.Model):
 
     def __str__(self):
         return f"Image for session {self.session_id} ({self.id})"
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+    bio = models.TextField(blank=True)
+    profile_picture = models.ImageField(upload_to="profile_pictures/", null=True, blank=True)
+
+    def __str__(self):
+        return f"Profile of {self.user.username}"

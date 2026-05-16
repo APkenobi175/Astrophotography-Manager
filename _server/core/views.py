@@ -10,7 +10,7 @@ from django.shortcuts import render
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods
-from .models import Session, SessionLike, SessionImage
+from .models import Session, SessionLike, SessionImage, UserProfile
 from django.conf import settings
 from django.views.decorators.http import require_POST
 
@@ -40,10 +40,12 @@ def index(req):
 def current_user(request):
     """Return basic info about the currently authenticated user."""
     u = request.user
+    profile, _ = UserProfile.objects.get_or_create(user=u)
     return JsonResponse({
         "firstName": u.first_name,
         "lastName": u.last_name,
         "username": u.username,
+        "profilePicture": profile.profile_picture.url if profile.profile_picture else None,
     })
 
 
@@ -507,9 +509,113 @@ def liked_sessions(request):
                 "ownerUsername": username_clean,
                 "postCreationDate": s.post_creation_date.isoformat(),
                 "likeCount": s.likes.count(),
-                "likedByCurrentUser": True,  # duh 
+                "likedByCurrentUser": True,  # duh
                 "images": [img.image.url for img in s.images.all()],
             }
         )
 
     return JsonResponse({"sessions": data})
+
+
+def _serialize_session(s, request_user):
+    total_integration = 0
+    if s.light_frames and s.light_exposure_seconds:
+        total_integration = s.light_frames * s.light_exposure_seconds
+    return {
+        "id": s.id,
+        "title": s.title,
+        "target": s.target,
+        "datetimeStart": s.datetime_start.isoformat(),
+        "locationName": s.location_name,
+        "lightFrames": s.light_frames,
+        "lightExposureSeconds": s.light_exposure_seconds,
+        "totalIntegrationSeconds": total_integration,
+        "iso": s.iso,
+        "cameraModel": s.camera_model,
+        "telescopeOrLens": s.telescope_or_lens,
+        "isPublic": s.is_public,
+        "caption": s.caption,
+        "ownerName": (f"{s.user.first_name or ''} {s.user.last_name or ''}".strip() or s.user.username),
+        "ownerUsername": s.user.username,
+        "postCreationDate": s.post_creation_date.isoformat(),
+        "likeCount": s.likes.count(),
+        "likedByCurrentUser": s.likes.filter(user=request_user).exists(),
+        "images": [img.image.url for img in s.images.all()],
+    }
+
+
+@login_required
+@require_http_methods(["GET", "PUT"])
+def user_profile(request, username):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    try:
+        profile_user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+    profile, _ = UserProfile.objects.get_or_create(user=profile_user)
+    is_own = request.user == profile_user
+
+    if request.method == "PUT":
+        if not is_own:
+            return JsonResponse({"error": "Forbidden"}, status=403)
+        try:
+            body = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+        profile.bio = body.get("bio", profile.bio).strip()
+        profile.save()
+
+    # Own profile → all sessions; other profile → public only
+    if is_own:
+        sessions_qs = Session.objects.filter(user=profile_user).order_by("-created_at")
+    else:
+        sessions_qs = Session.objects.filter(user=profile_user, is_public=True).order_by("-created_at")
+
+    return JsonResponse({
+        "username": profile_user.username,
+        "firstName": profile_user.first_name,
+        "lastName": profile_user.last_name,
+        "bio": profile.bio,
+        "profilePicture": profile.profile_picture.url if profile.profile_picture else None,
+        "isOwnProfile": is_own,
+        "sessions": [_serialize_session(s, request.user) for s in sessions_qs],
+    })
+
+
+@login_required
+@require_POST
+def upload_profile_picture(request, username):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    try:
+        profile_user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+    if request.user != profile_user:
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    f = request.FILES.get("picture")
+    if not f:
+        return JsonResponse({"error": "No file provided"}, status=400)
+
+    ALLOWED_EXT = (".jpg", ".jpeg", ".png")
+    MAX_BYTES = 10 * 1024 * 1024  # 10 MB
+
+    if not f.name.lower().endswith(ALLOWED_EXT):
+        return JsonResponse({"error": "Invalid file type"}, status=400)
+    if f.size > MAX_BYTES:
+        return JsonResponse({"error": "File too large (max 10 MB)"}, status=400)
+
+    profile, _ = UserProfile.objects.get_or_create(user=profile_user)
+    if profile.profile_picture:
+        try:
+            profile.profile_picture.delete(save=False)
+        except Exception:
+            pass
+    profile.profile_picture = f
+    profile.save()
+
+    return JsonResponse({"profilePicture": profile.profile_picture.url})

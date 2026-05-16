@@ -33,7 +33,7 @@ const router = createHashRouter([
       }
       ,
       {
-        path: "/profile",
+        path: "/profile/:username",
         element: <ProfilePage />,
       }
       // later:
