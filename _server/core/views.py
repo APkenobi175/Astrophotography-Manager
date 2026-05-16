@@ -165,13 +165,67 @@ def sessions_collection(request):
 
     return JsonResponse(data, status=201)
 
-# this handles /api/sessions/<session_id>/ for GET
+# this handles /api/sessions/<session_id>/ for GET, PUT, DELETE
 @login_required
+@require_http_methods(["GET", "PUT", "DELETE"])
 def session_detail(request, session_id):
     try:
         s = Session.objects.get(id=session_id)
     except Session.DoesNotExist:
         return JsonResponse({"error": "Session not found"}, status=404)
+
+    if request.method == "DELETE":
+        if s.user != request.user:
+            return JsonResponse({"error": "Forbidden"}, status=403)
+        s.delete()
+        return JsonResponse({"deleted": True})
+
+    if request.method == "PUT":
+        if s.user != request.user:
+            return JsonResponse({"error": "Forbidden"}, status=403)
+        try:
+            body = json.loads(request.body.decode("utf-8"))
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+        title = body.get("title", s.title).strip()
+        target = body.get("target", s.target).strip()
+        datetime_start_raw = body.get("datetimeStart")
+        location_name = body.get("locationName", s.location_name).strip()
+        light_frames = body.get("lightFrames", s.light_frames)
+        light_exposure_seconds = body.get("lightExposureSeconds", s.light_exposure_seconds)
+        iso = body.get("iso", s.iso)
+        camera_model = body.get("cameraModel", s.camera_model).strip()
+        telescope_or_lens = body.get("telescopeOrLens", s.telescope_or_lens).strip()
+        is_public = bool(body.get("isPublic", s.is_public))
+        caption = body.get("caption", s.caption).strip()
+
+        if not title or not target or not location_name or not camera_model or not telescope_or_lens:
+            return JsonResponse({"error": "Missing required fields"}, status=400)
+
+        if datetime_start_raw:
+            dt_start = parse_datetime(datetime_start_raw)
+            if dt_start is None:
+                return JsonResponse({"error": "Invalid datetimeStart format"}, status=400)
+            s.datetime_start = dt_start
+
+        try:
+            light_frames = int(light_frames)
+            light_exposure_seconds = int(light_exposure_seconds)
+        except (TypeError, ValueError):
+            return JsonResponse({"error": "Invalid numeric fields"}, status=400)
+
+        s.title = title
+        s.target = target
+        s.location_name = location_name
+        s.light_frames = light_frames
+        s.light_exposure_seconds = light_exposure_seconds
+        s.iso = iso
+        s.camera_model = camera_model
+        s.telescope_or_lens = telescope_or_lens
+        s.is_public = is_public
+        s.caption = caption
+        s.save()
 
     if s.user != request.user and not s.is_public:
         return JsonResponse({"error": "Forbidden"}, status=403)

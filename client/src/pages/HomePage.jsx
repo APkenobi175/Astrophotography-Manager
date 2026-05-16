@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import EditSessionModal from "../assets/EditSessionModal.jsx";
 
 function getCookie(name) {
   const value = `; ${document.cookie}`;
@@ -30,6 +31,9 @@ function HomePage() {
   const [selectedSuggestion, setSelectedSuggestion] = useState(false);
   const [caption, setCaption] = useState("");
   const [imagesFiles, setImagesFiles] = useState([]);
+
+  // Edit/delete state
+  const [editingSession, setEditingSession] = useState(null);
 
   // Fetch the sessions from the server
   async function fetchSessions() {
@@ -137,6 +141,43 @@ function HomePage() {
     } catch (err) {
       console.error("Error creating session:", err);
     }
+  }
+
+  async function handleDeleteSession(sessionId) {
+    if (!window.confirm("Delete this session? This cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+      });
+      if (!res.ok) {
+        console.error("Delete failed", res.status);
+        return;
+      }
+      setSessions(prev => prev.filter(s => s.id !== sessionId));
+    } catch (err) {
+      console.error("Error deleting session:", err);
+    }
+  }
+
+  async function handleSaveEdit(sessionId, payload) {
+    const res = await fetch(`/api/sessions/${sessionId}/`, {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Save failed");
+    }
+    const updated = await res.json();
+    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updated } : s));
+    setEditingSession(null);
   }
 
   // The logic for target auto complete using the astronomy API
@@ -380,11 +421,33 @@ function handleSelectSuggestion(suggestion) {
                   {s.title}
                 </Link>
                 <span className="my-session-caption">{s.caption}</span>
+                <div className="my-session-actions">
+                  <button
+                    className="session-action-btn edit-btn"
+                    onClick={() => setEditingSession(s)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="session-action-btn delete-btn"
+                    onClick={() => handleDeleteSession(s.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {editingSession && (
+        <EditSessionModal
+          session={editingSession}
+          onSave={handleSaveEdit}
+          onClose={() => setEditingSession(null)}
+        />
+      )}
     </>
   );
 }
