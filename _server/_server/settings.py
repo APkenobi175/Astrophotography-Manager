@@ -28,11 +28,15 @@ SECRET_KEY = 'django-insecure-b3+-#mtd71hul#1(jc^^x#k%4zr)aief^c9i14ya77)9e)1af(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == 'True'
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.0.197").split(",") if h.strip()]
 
 # Allow common local dev origins (e.g. Vite dev server) to make requests
 # without triggering Django's CSRF Origin check. Update or extend as needed.
-CSRF_TRUSTED_ORIGINS = ['http://10.0.0.197:8080']
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "http://10.0.0.197:8080,http://localhost:8080,http://127.0.0.1:8080").split(",")
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS if origin.strip()]
+
+# Security headers for production
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups" if not DEBUG else None
 
 
 # Application definition
@@ -89,11 +93,11 @@ DATABASES = {
     ## My locally running postgres server
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'NAME': os.getenv('DB_NAME', 'astrophotography'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -148,6 +152,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = "registration/sign_in/"
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Only include client dist if it exists (for production builds)
+client_dist = BASE_DIR / "../client/dist"
 STATICFILES_DIRS = [
-    BASE_DIR / "../client/dist",
-]
+    client_dist,
+] if client_dist.exists() else []
