@@ -30,8 +30,8 @@ def index(req):
         "debug": settings.DEBUG,
         "manifest": MANIFEST,
         # When DEBUG, Vite dev server serves JS/CSS; template ignores these.
-        "js_file": "" if settings.DEBUG else MANIFEST["src/main.ts"]["file"],
-        "css_file": "" if settings.DEBUG else MANIFEST["src/main.ts"]["css"][0],
+        "js_file": "" if settings.DEBUG else MANIFEST["src/main.jsx"]["file"],
+        "css_file": "" if settings.DEBUG else MANIFEST["src/main.jsx"]["css"][0],
     }
     return render(req, "core/index.html", context)
 
