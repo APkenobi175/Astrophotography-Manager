@@ -175,9 +175,12 @@ function HomePage() {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.error || "Save failed");
     }
-    const updated = await res.json();
-    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, ...updated } : s));
+    // Modal handles its own close; refresh sessions after modal signals done
+  }
+
+  function handleEditClose() {
     setEditingSession(null);
+    fetchSessions(); // refresh so image changes are reflected
   }
 
   // The logic for target auto complete using the astronomy API
@@ -445,7 +448,7 @@ function handleSelectSuggestion(suggestion) {
         <EditSessionModal
           session={editingSession}
           onSave={handleSaveEdit}
-          onClose={() => setEditingSession(null)}
+          onClose={handleEditClose}
         />
       )}
     </>

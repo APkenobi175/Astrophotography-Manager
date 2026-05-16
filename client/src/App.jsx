@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
@@ -50,21 +50,30 @@ function App() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
 
-  function closeMenu() {
-    setMenuOpen(false);
-  }
+  function closeMenu() { setMenuOpen(false); }
 
   const profilePath = currentUsername ? `/profile/${currentUsername}` : "/";
 
   return (
     <div className="app-root">
       <header className="app-header">
-        <h1 className="app-title">Astrophotography Sessions</h1>
+        {/* Title — clicking goes to the public feed */}
+        <Link to="/public" className="app-title-link">
+          <h1 className="app-title">Astrophotography Sessions</h1>
+        </Link>
 
+        {/* Centered nav — desktop only */}
+        <nav className="app-nav desktop-only">
+          <Link to="/">My Sessions</Link>
+          <Link to="/public">Public Feed</Link>
+          <Link to="/liked">Liked Sessions</Link>
+        </nav>
+
+        {/* Right side: avatar + logout (desktop) / hamburger (mobile) */}
         <div className="app-header-right" ref={navRef}>
-          {/* Hamburger button — visible only on mobile */}
+          {/* Hamburger — mobile only */}
           <button
-            className="hamburger-btn"
+            className="hamburger-btn mobile-only"
             aria-label="Toggle menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen(o => !o)}
@@ -74,18 +83,20 @@ function App() {
             </span>
           </button>
 
-          {/* Nav links */}
-          <nav className={`app-nav ${menuOpen ? "nav-open" : ""}`}>
-            <Link to="/" onClick={closeMenu}>My Sessions</Link>
-            <Link to="/public" onClick={closeMenu}>Public Feed</Link>
-            <Link to="/liked" onClick={closeMenu}>Liked Sessions</Link>
-            <Link to={profilePath} onClick={closeMenu}>My Profile</Link>
-            <button className="nav-logout-btn" onClick={() => { closeMenu(); logout(); }}>
-              Logout
-            </button>
-          </nav>
+          {/* Mobile dropdown nav */}
+          {menuOpen && (
+            <nav className="mobile-nav-dropdown">
+              <Link to="/" onClick={closeMenu}>My Sessions</Link>
+              <Link to="/public" onClick={closeMenu}>Public Feed</Link>
+              <Link to="/liked" onClick={closeMenu}>Liked Sessions</Link>
+              <Link to={profilePath} onClick={closeMenu}>My Profile</Link>
+              <button className="nav-logout-btn" onClick={() => { closeMenu(); logout(); }}>
+                Logout
+              </button>
+            </nav>
+          )}
 
-          {/* Avatar — desktop only (hidden on mobile, logout moves into nav) */}
+          {/* Desktop avatar + logout */}
           <Link to={profilePath} className="header-avatar desktop-only" title="My Profile">
             {avatarPic ? (
               <img src={avatarPic} alt="avatar" className="header-avatar-img" />

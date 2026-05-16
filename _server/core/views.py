@@ -55,17 +55,10 @@ def current_user(request):
 def sessions_collection(request):
     if request.method == "GET":
         sessions = Session.objects.filter(user=request.user).order_by("-created_at")
-        # Get image URLS for each session
-        def _images_for_session(req, sess):
-            imgs = []
-            for im in sess.images.all():
-                # Return relative media path so dev server can proxy /media
-                imgs.append(im.image.url)
-            return imgs
-
-        # big ol list comprehension
-        data = [
-            {
+        data = []
+        for s in sessions:
+            img_objects = [{"id": im.id, "url": im.image.url} for im in s.images.all()]
+            data.append({
                 "id": s.id,
                 "title": s.title,
                 "target": s.target,
@@ -83,10 +76,9 @@ def sessions_collection(request):
                 "postCreationDate": s.post_creation_date.isoformat(),
                 "likeCount": s.likes.count(),
                 "likedByCurrentUser": s.likes.filter(user=request.user).exists(),
-                "images": _images_for_session(request, s),
-            }
-            for s in sessions
-        ]
+                "images": [o["url"] for o in img_objects],
+                "imageObjects": img_objects,
+            })
 
         return JsonResponse({"sessions": data})
 
@@ -467,6 +459,21 @@ def upload_session_images(request, session_id):
         saved.append({"id": img.id, "url": img.image.url})
 
     return JsonResponse({"images": saved}, status=201)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_session_image(request, session_id, image_id):
+    session = get_object_or_404(Session, id=session_id)
+    if session.user != request.user:
+        return JsonResponse({"error": "Forbidden"}, status=403)
+    image = get_object_or_404(SessionImage, id=image_id, session=session)
+    try:
+        image.image.delete(save=False)
+    except Exception:
+        pass
+    image.delete()
+    return JsonResponse({"deleted": True})
 
 # A seperate feed for all the user's own liked sessions
 @login_required

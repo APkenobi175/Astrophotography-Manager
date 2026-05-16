@@ -7,21 +7,12 @@ export default function PublicFeedPage() {
 
   useEffect(() => {
     async function fetchPublic() {
-        // Fetch all the public sessions
       try {
         const res = await fetch("/api/sessions/public/", { credentials: "include" });
-
-        if (!res.ok) {
-          console.error("Failed to fetch public sessions", res.status);
-          setSessions([]);
-          setLoading(false);
-          return;
-        }
-
+        if (!res.ok) { setSessions([]); return; }
         const body = await res.json().catch(() => ({}));
         setSessions(body.sessions || []);
-      } catch (err) {
-        console.error("Error fetching public sessions:", err);
+      } catch {
         setSessions([]);
       } finally {
         setLoading(false);
@@ -29,27 +20,26 @@ export default function PublicFeedPage() {
     }
     fetchPublic();
   }, []);
-  // Leading means we are waiting for the fetch to complete
-  if (loading) return <div className="card">Loading…</div>;
-  // If there are no sessions then show a message. This will only happen like one time 
-  if (sessions.length === 0)
-    return (
-      <div className="card">
-        <h2>Public Sessions</h2>
-        <p>No public sessions yet.</p>
-      </div>
-    );
-    // Otherwise, show the public sessions
-  return (
-    <div className="div">
-      <h2>Public Sessions</h2>
-      <p className="subtle">Newest public astrophotography logs</p>
 
-      <div className="session-div-grid">
-        {sessions.map((s) => (
-          <SessionDiv key={s.id} session={s} />
-        ))}
+  return (
+    <div className="feed-page">
+      <div className="page-heading">
+        <h2>Public Feed</h2>
+        <p className="page-subheading">Newest astrophotography sessions from the community</p>
       </div>
+
+      {loading ? (
+        <div className="loading-state">Loading sessions…</div>
+      ) : sessions.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">🔭</div>
+          <p>No public sessions yet. Be the first to share!</p>
+        </div>
+      ) : (
+        <div className="session-div-grid">
+          {sessions.map(s => <SessionDiv key={s.id} session={s} />)}
+        </div>
+      )}
     </div>
   );
 }

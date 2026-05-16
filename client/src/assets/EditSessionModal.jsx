@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { getCookie } from "./csrfhelper.js";
 
 export default function EditSessionModal({ session, onSave, onClose }) {
   const [title, setTitle] = useState(session.title || "");
@@ -17,27 +18,79 @@ export default function EditSessionModal({ session, onSave, onClose }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Image state — use imageObjects if available (includes IDs), fall back to URL-only
+  const initialImages = (session.imageObjects || []).length > 0
+    ? session.imageObjects
+    : (session.images || []).map((url, i) => ({ id: null, url }));
+
+  const [existingImages, setExistingImages] = useState(initialImages);
+  const [removedIds, setRemovedIds] = useState([]);   // IDs queued for deletion
+  const [newFiles, setNewFiles] = useState([]);        // File objects to upload
+  const [newPreviews, setNewPreviews] = useState([]);  // Object URLs for preview
+  const fileInputRef = useRef(null);
+
+  const totalCount = existingImages.length + newFiles.length;
+  const canAddMore = totalCount < 3;
+
+  function handleRemoveExisting(img) {
+    setExistingImages(prev => prev.filter(i => i !== img));
+    if (img.id) setRemovedIds(prev => [...prev, img.id]);
+  }
+
+  function handleFileChange(e) {
+    const files = Array.from(e.target.files);
+    const slots = 3 - existingImages.length - newFiles.length;
+    const picked = files.slice(0, slots);
+    setNewFiles(prev => [...prev, ...picked]);
+    setNewPreviews(prev => [...prev, ...picked.map(f => URL.createObjectURL(f))]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function handleRemoveNew(idx) {
+    URL.revokeObjectURL(newPreviews[idx]);
+    setNewFiles(prev => prev.filter((_, i) => i !== idx));
+    setNewPreviews(prev => prev.filter((_, i) => i !== idx));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     setError("");
     try {
+      // 1. Save metadata
       await onSave(session.id, {
-        title,
-        target,
-        datetimeStart,
-        locationName,
+        title, target, datetimeStart, locationName,
         lightFrames: lightFrames !== "" ? Number(lightFrames) : 0,
         lightExposureSeconds: lightExposureSeconds !== "" ? Number(lightExposureSeconds) : 0,
         iso: iso !== "" ? Number(iso) : null,
-        cameraModel,
-        telescopeOrLens,
-        isPublic,
-        caption,
+        cameraModel, telescopeOrLens, isPublic, caption,
       });
+
+      // 2. Delete removed images
+      for (const id of removedIds) {
+        await fetch(`/api/sessions/${session.id}/images/${id}/`, {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+        });
+      }
+
+      // 3. Upload new images
+      if (newFiles.length > 0) {
+        const form = new FormData();
+        newFiles.forEach(f => form.append("images", f));
+        await fetch(`/api/sessions/${session.id}/images/`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          body: form,
+        });
+      }
+
+      // All done — close modal (parent will refresh sessions)
+      onClose();
     } catch (err) {
       setError(err.message || "Save failed");
-    } finally {
       setSaving(false);
     }
   }
@@ -58,12 +111,7 @@ export default function EditSessionModal({ session, onSave, onClose }) {
           </label>
           <label>
             Start Date &amp; Time
-            <input
-              type="datetime-local"
-              value={datetimeStart}
-              onChange={e => setDatetimeStart(e.target.value)}
-              required
-            />
+            <input type="datetime-local" value={datetimeStart} onChange={e => setDatetimeStart(e.target.value)} required />
           </label>
           <label>
             Location
@@ -97,6 +145,64 @@ export default function EditSessionModal({ session, onSave, onClose }) {
             Caption
             <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={3} />
           </label>
+
+          {/* Image management — full width */}
+          <div className="modal-images-section">
+            <div className="modal-images-label">
+              Photos
+              <span className="modal-images-count">{totalCount} / 3</span>
+            </div>
+
+            <div className="modal-images-row">
+              {/* Existing images */}
+              {existingImages.map(img => (
+                <div key={img.url} className="modal-img-thumb-wrap">
+                  <img src={img.url} alt="session" className="modal-img-thumb" />
+                  <button
+                    type="button"
+                    className="modal-img-remove"
+                    onClick={() => handleRemoveExisting(img)}
+                    title="Remove image"
+                  >×</button>
+                </div>
+              ))}
+
+              {/* New image previews */}
+              {newPreviews.map((url, idx) => (
+                <div key={url} className="modal-img-thumb-wrap modal-img-new">
+                  <img src={url} alt="new" className="modal-img-thumb" />
+                  <button
+                    type="button"
+                    className="modal-img-remove"
+                    onClick={() => handleRemoveNew(idx)}
+                    title="Remove image"
+                  >×</button>
+                </div>
+              ))}
+
+              {/* Add button */}
+              {canAddMore && (
+                <button
+                  type="button"
+                  className="modal-img-add-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  + Add Photo
+                </button>
+              )}
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              multiple
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+            <p className="modal-images-hint">JPG or PNG, max 50 MB each, up to 3 total.</p>
+          </div>
+
           <div className="modal-actions">
             <button type="submit" disabled={saving}>{saving ? "Saving…" : "Save Changes"}</button>
             <button type="button" onClick={onClose} disabled={saving}>Cancel</button>

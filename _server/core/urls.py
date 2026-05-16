@@ -11,6 +11,7 @@ urlpatterns = [
     path("api/sessions/liked/", views.liked_sessions, name="liked_sessions"),
     path("api/sessions/<int:session_id>/like/", views.toggle_session_like, name="toggle_session_like"),
     path("api/sessions/<int:session_id>/images/", views.upload_session_images, name="upload_session_images"),
+    path("api/sessions/<int:session_id>/images/<int:image_id>/", views.delete_session_image, name="delete_session_image"),
     path("api/profile/<str:username>/", views.user_profile, name="user_profile"),
     path("api/profile/<str:username>/picture/", views.upload_profile_picture, name="upload_profile_picture"),
 ]

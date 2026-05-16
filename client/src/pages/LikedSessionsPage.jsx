@@ -1,55 +1,45 @@
 import { useEffect, useState } from "react";
-import SessionCard from "../assets/sessiondiv.jsx";
+import SessionDiv from "../assets/sessiondiv.jsx";
 
 export default function LikedSessionsPage() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-    // Fetcht he liked sessions for the user from the server
-  async function fetchLiked() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/sessions/liked/", {
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        console.error("Failed to fetch liked sessions", res.status);
-        setSessions([]);
-        return;
-      }
-        // this should never happen
-      const body = await res.json();
-      setSessions(body.sessions || []);
-    } catch (err) {
-      console.error("Error fetching liked sessions:", err);
-      setSessions([]);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
+    async function fetchLiked() {
+      try {
+        const res = await fetch("/api/sessions/liked/", { credentials: "include" });
+        if (!res.ok) { setSessions([]); return; }
+        const body = await res.json();
+        setSessions(body.sessions || []);
+      } catch {
+        setSessions([]);
+      } finally {
+        setLoading(false);
+      }
+    }
     fetchLiked();
   }, []);
 
   return (
-    <main className="page">
-      <header className="page-header">
-        <h1>Liked Sessions</h1>
-        <p>Astrophotography logs you&apos;ve hearted.</p>
-      </header>
+    <div className="feed-page">
+      <div className="page-heading">
+        <h2>Liked Sessions</h2>
+        <p className="page-subheading">Astrophotography logs you've hearted</p>
+      </div>
 
       {loading ? (
-        <p>Loading liked sessions…</p>
+        <div className="loading-state">Loading…</div>
       ) : sessions.length === 0 ? (
-        <p>You haven&apos;t liked any sessions yet.</p>
+        <div className="empty-state">
+          <div className="empty-icon">♡</div>
+          <p>You haven't liked any sessions yet.</p>
+        </div>
       ) : (
         <div className="session-div-grid">
-          {sessions.map((s) => (
-            <SessionCard key={s.id} session={s} />
-          ))}
+          {sessions.map(s => <SessionDiv key={s.id} session={s} />)}
         </div>
       )}
-    </main>
+    </div>
   );
 }
