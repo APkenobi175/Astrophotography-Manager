@@ -392,7 +392,7 @@ def upload_session_images(request, session_id):
         return JsonResponse({"error": "Maximum 3 images allowed"}, status=400)
 
     saved = []
-    MAX_BYTES = 20 * 1024 * 1024  # 20 MB per file
+    MAX_BYTES = 50 * 1024 * 1024  # 50 MB per file
     ALLOWED_EXT = (".jpg", ".jpeg", ".png") # No RAW FILES allowed
 
     for f in files:
