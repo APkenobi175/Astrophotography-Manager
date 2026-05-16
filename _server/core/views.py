@@ -385,6 +385,8 @@ def upload_session_images(request, session_id):
         return JsonResponse({"error": "Forbidden"}, status=403)
     # Get the files from the request
     files = request.FILES.getlist("images")
+    print("FILES:", request.FILES)
+    print("FILES keys:", list(request.FILES.keys()))
     if not files:
         return JsonResponse({"error": "No files provided"}, status=400)
     # Limiting to max 3 images per upload
