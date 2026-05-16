@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-b3+-#mtd71hul#1(jc^^x#k%4zr)aief^c9i14ya77)9e)1af(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "False") == 'True'
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.0.197").split(",") if h.strip()]
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,10.0.0.197,10.0.0.197:8080").split(",") if h.strip()]
 
 # Allow common local dev origins (e.g. Vite dev server) to make requests
 # without triggering Django's CSRF Origin check. Update or extend as needed.
