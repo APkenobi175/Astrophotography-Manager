@@ -1393,270 +1393,356 @@ button:disabled { opacity: 0.5; cursor: default; }
 }
 
 /* ==========================================
-   PROFILE MESSAGE BUTTON
+   MOON CALENDAR PAGE
    ========================================== */
-.message-btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 7px 18px;
-  border-radius: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 10px;
-  transition: background var(--transition);
-}
-
-.message-btn:hover { background: var(--accent-light); }
-
-/* ==========================================
-   CHAT BAR (bottom strip)
-   ========================================== */
-.chat-bar {
-  position: fixed;
-  bottom: 0;
-  right: 16px;
-  background: var(--bg-light);
-  border: 1px solid var(--border-light);
-  border-bottom: none;
-  border-radius: 10px 10px 0 0;
-  padding: 8px 12px;
+.moon-page {
+  width: 100%;
+  max-width: 700px;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 800;
-  box-shadow: var(--shadow-md);
-  min-width: 200px;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.chat-bar-label {
-  font-size: 0.78rem;
-  font-weight: 700;
+/* Location input card */
+.moon-coords-card {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.moon-coords-form {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.moon-coord-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 130px;
+}
+
+.moon-coord-field label {
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
+  letter-spacing: 0.04em;
 }
 
-.chat-bar-avatars {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  max-width: 300px;
-}
-
-.chat-bar-btn {
-  position: relative;
-  width: 38px;
-  height: 38px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #2b3a5c, #1e2a45);
-  border: 2px solid var(--border-light);
-  color: var(--accent-light);
+.moon-coord-field input {
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 7px;
+  padding: 9px 11px;
+  color: var(--text);
   font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 0;
   transition: border-color var(--transition), box-shadow var(--transition);
-  flex-shrink: 0;
 }
 
-.chat-bar-btn:hover,
-.chat-bar-btn-active {
+.moon-coord-field input:focus {
+  outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.chat-bar-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 9999px;
-}
-
-.chat-bar-preview {
-  display: none; /* shown via tooltip or just hidden */
-}
-
-/* ==========================================
-   CHAT WINDOW (floating)
-   ========================================== */
-.chat-window {
-  position: fixed;
-  bottom: 52px; /* sit above the chat bar */
-  width: 300px;
-  height: 400px;
-  background: var(--bg-light);
-  border: 1px solid var(--border-light);
-  border-radius: 12px 12px 0 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 900;
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-}
-
-.chat-window-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
+.moon-load-btn {
+  padding: 9px 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
   flex-shrink: 0;
 }
 
-.chat-window-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.chat-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #2b3a5c, #1e2a45);
+.moon-locate-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 1rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  color: var(--text);
+  border-radius: 8px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+}
+
+.moon-locate-btn:hover { background: var(--bg-card); }
+
+.moon-geo-note {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+/* Calendar wrapper */
+.moon-cal-wrap {
+  background: var(--bg-light);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Navigation row */
+.moon-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.moon-cal-month {
+  margin: 0;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: var(--accent-light);
-  flex-shrink: 0;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.chat-avatar-img {
-  width: 30px;
-  height: 30px;
+.moon-loading-pip {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
   border-radius: 9999px;
-  object-fit: cover;
+  background: var(--accent);
+  animation: moon-pip-pulse 1s infinite;
+}
+
+@keyframes moon-pip-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+.moon-nav-btn {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 1.3rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.moon-nav-btn:hover { background: var(--bg-card); color: var(--text); }
+
+/* Legend */
+.moon-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.moon-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+}
+
+.moon-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
   flex-shrink: 0;
 }
 
-.chat-window-name {
+/* Error */
+.moon-error {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #f87171;
+  padding: 10px 14px;
+  border-radius: 8px;
   font-size: 0.88rem;
+}
+
+/* Calendar grid */
+.moon-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.moon-dow {
+  text-align: center;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding-bottom: 6px;
+}
+
+/* Day cell */
+.moon-day {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px;
+  transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+  overflow: hidden;
+}
+
+.moon-day:hover { transform: scale(1.05); border-color: var(--border-light); }
+
+.moon-today {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.moon-sel { transform: scale(1.07) !important; }
+
+.moon-shimmer { animation: moon-shimmer 1.4s ease-in-out infinite; }
+
+@keyframes moon-shimmer {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+.moon-day-num {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.moon-phase-tag {
+  font-size: 0.48rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  line-height: 1;
+}
+
+.moon-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* Detail panel */
+.moon-detail {
+  border: 1px solid;
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: moon-detail-in 0.15s ease;
+}
+
+@keyframes moon-detail-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.moon-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.moon-detail-date {
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text);
 }
 
-.chat-window-close {
+.moon-detail-close {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 3px 6px;
+  font-size: 0.85rem;
+  padding: 3px 7px;
   border-radius: 5px;
-}
-
-.chat-window-close:hover { background: var(--bg-hover); color: var(--text); }
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.chat-empty {
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 0.82rem;
-  margin: auto;
-}
-
-.chat-bubble {
-  max-width: 78%;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.chat-bubble-mine {
-  align-self: flex-end;
-  align-items: flex-end;
-}
-
-.chat-bubble-theirs {
-  align-self: flex-start;
-  align-items: flex-start;
-}
-
-.chat-bubble-body {
-  padding: 8px 11px;
-  border-radius: 14px;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  word-break: break-word;
-}
-
-.chat-bubble-mine .chat-bubble-body {
-  background: var(--accent);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
-
-.chat-bubble-theirs .chat-bubble-body {
-  background: var(--bg-hover);
-  color: var(--text);
-  border-bottom-left-radius: 4px;
-}
-
-.chat-bubble-time {
-  font-size: 0.68rem;
-  color: var(--text-dim);
-  padding: 0 4px;
-}
-
-.chat-input-row {
-  display: flex;
-  gap: 6px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-  background: var(--bg-card);
-}
-
-.chat-input {
-  flex: 1;
-  background: var(--bg-input);
-  border: 1px solid var(--border-light);
-  border-radius: 20px;
-  padding: 8px 13px;
-  color: var(--text);
-  font-size: 0.88rem;
-  outline: none;
-  transition: border-color var(--transition);
-}
-
-.chat-input:focus { border-color: var(--accent); }
-
-.chat-send-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 9999px;
-  background: var(--accent);
-  border: none;
-  color: #fff;
-  font-size: 0.9rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
   flex-shrink: 0;
-  transition: background var(--transition);
 }
 
-.chat-send-btn:hover:not(:disabled) { background: var(--accent-light); }
-.chat-send-btn:disabled { opacity: 0.4; }
+.moon-detail-close:hover { background: var(--bg-hover); color: var(--text); }
+
+.moon-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.moon-detail-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.moon-detail-lbl {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.moon-detail-val {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.moon-detail-summary {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.moon-quality-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  flex-shrink: 0;
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* Mobile overrides */
+@media (max-width: 640px) {
+  .moon-page { max-width: 100%; }
+  .moon-coords-form { flex-direction: column; }
+  .moon-load-btn, .moon-locate-btn { width: 100%; height: 38px; }
+  .moon-detail-stats { grid-template-columns: repeat(2, 1fr); }
+  .moon-day { border-radius: 6px; }
+  .moon-icon { font-size: 0.78rem; }
+  .moon-day-num { font-size: 0.64rem; }
+}

@@ -2,7 +2,6 @@ import { Outlet, Link } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import CreateSessionModal from "./assets/CreateSessionModal.jsx";
-import ChatBar from "./assets/ChatBar.jsx";
 
 async function logout() {
   const res = await fetch("/registration/logout/", { credentials: "include" });
@@ -60,6 +59,7 @@ function App() {
         <nav className="app-nav desktop-only">
           <Link to="/public">Public Feed</Link>
           <Link to="/liked">Liked Sessions</Link>
+          <Link to="/moon">Moon Calendar</Link>
         </nav>
 
         {/* Right side */}
@@ -81,6 +81,7 @@ function App() {
             <nav className="mobile-nav-dropdown">
               <Link to="/public" onClick={closeMenu}>Public Feed</Link>
               <Link to="/liked" onClick={closeMenu}>Liked Sessions</Link>
+              <Link to="/moon" onClick={closeMenu}>Moon Calendar</Link>
               <Link to={profilePath} onClick={closeMenu}>My Profile</Link>
               <button className="nav-logout-btn" onClick={() => { closeMenu(); logout(); }}>Logout</button>
             </nav>
@@ -117,7 +118,6 @@ function App() {
         />
       )}
 
-      {currentUsername && <ChatBar currentUsername={currentUsername} />}
     </div>
   );
 }

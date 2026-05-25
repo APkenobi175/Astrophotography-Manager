@@ -7,17 +7,19 @@ import "./index.css";
 import PublicFeedPage from "./pages/PublicFeedPage.jsx";
 import LikedSessionsPage from "./pages/LikedSessionsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import MoonCalendarPage from "./pages/MoonCalendarPage.jsx";
 
 const router = createHashRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      { path: "/",               element: <PublicFeedPage /> },
-      { path: "/public",         element: <PublicFeedPage /> },
-      { path: "/liked",          element: <LikedSessionsPage /> },
-      { path: "/sessions/:id",   element: <SessionDetailPage /> },
+      { path: "/",                  element: <PublicFeedPage /> },
+      { path: "/public",            element: <PublicFeedPage /> },
+      { path: "/liked",             element: <LikedSessionsPage /> },
+      { path: "/sessions/:id",      element: <SessionDetailPage /> },
       { path: "/profile/:username", element: <ProfilePage /> },
+      { path: "/moon",              element: <MoonCalendarPage /> },
     ],
   },
 ]);
